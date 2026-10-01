@@ -135,19 +135,36 @@ _TEMPLATES: dict[str, list[str]] = {
 }
 
 
-# Tokens que não são nome de pessoa — aparecem em handles de ateliê
-_GENERICOS = {
-    "costureira", "costureiras", "atelie", "atelier", "ateliers", "modista",
-    "oficial", "ofc", "by", "arte", "artes", "costura", "costuras", "croche",
-    "bordado", "moda", "store", "loja", "shop", "studio", "estudio", "criacoes",
-    "ajustes", "confeccao", "customizacao", "personalizados", "the", "real",
-    "grupo", "clube", "cursos", "curso", "aula", "aulas", "dicas", "canal",
-    "oficial1", "oficiall", "ofc1", "page", "of", "meu", "minha", "sou",
-    # elogios e papéis que não são nomes próprios
-    "admiradora", "admirador", "seguidora", "seguidor", "f", "cliente",
-    "clientes", "amiga", "amigo", "amigao", "gente", "pessoa", "menina",
-    "moca", "senhora", "dona", "querida", "querido", "linda", "lindo",
-    "top", "maravilhosa", "perfeita", "excelente", "otima", "boa", "bom",
+# Palavras que aparecem ANTES de um nome num handle de ateliê
+# ("atelie_maria", "costureira_ana"). Só nesses casos vale pular para o
+# token seguinte em busca do nome.
+SHOP_PREFIXES = {
+    "atelie", "atelier", "ateliers", "costureira", "costureiras", "modista",
+    "oficial", "ofc", "by", "loja", "shop", "store", "studio", "estudio",
+    "arte", "artes", "costura", "costuras", "croche", "bordado", "moda",
+    "ajustes", "confeccao", "criacoes", "ateliê", "espaco", "cantinho",
+}
+
+# Tokens que não são nome de pessoa. Se só sobrar isso, é melhor NÃO inventar
+# vocativo: "@admiradora Que bom, Admiradora!" soa robótico.
+_GENERICOS = SHOP_PREFIXES | {
+    "the", "real", "grupo", "clube", "cursos", "curso", "aula", "aulas",
+    "dicas", "canal", "page", "meu", "minha", "sou", "of",
+    # elogios e papéis
+    "admiradora", "admirador", "seguidora", "seguidor", "cliente", "clientes",
+    "amiga", "amigo", "amigao", "gente", "pessoa", "menina", "moca", "senhora",
+    "dona", "querida", "querido", "linda", "lindo", "top", "maravilhosa",
+    "perfeita", "excelente", "otima", "boa", "bom",
+    # adjetivos e estados comuns em handles
+    "dificil", "facil", "feliz", "triste", "chateada", "chateado", "brava",
+    "bravo", "nova", "novo", "velha", "velho", "feia", "feio", "ruim",
+    "melhor", "pior", "grande", "pequena", "pequeno", "rapida", "rapido",
+    "lenta", "lento", "cansada", "cansado", "ocupada", "ocupado", "simples",
+    "criativa", "criativo", "elegante", "chique", "caro", "barato", "gratis",
+    # conectivos e siglas
+    "da", "de", "do", "das", "dos", "e", "y", "br", "brasil", "brazil",
+    "promo", "promocao", "promocoes", "oferta", "ofertas", "sale", "desconto",
+    "customizacao", "personalizados", "personalizado",
 }
 
 
@@ -171,18 +188,18 @@ def _primeiro_nome(author: str) -> str:
 
     candidatos = [p for p in partes if limpo(p) not in _GENERICOS and len(p) >= 2]
     if not candidatos:
-        candidatos = [p for p in partes if len(p) >= 2]
-    if not candidatos:
-        return ""
+        return ""          # nada que sirva de nome próprio
 
-    # Handles começam pelo nome da pessoa ('joana.lima', 'rosa.costuras') ou
-    # por uma palavra genérica de ateliê ('atelie_maria', 'costureira_ana').
-    if limpo(partes[0]) not in _GENERICOS and len(partes[0]) >= 2:
+    # Handle de ateliê: pula o prefixo genérico e pega o nome que vem depois
+    # ("atelie_maria" -> "Maria", "costureira_ana" -> "Ana").
+    # Nos demais, o nome está no começo ("joana.lima" -> "Joana").
+    if limpo(partes[0]) in SHOP_PREFIXES:
+        nome = candidatos[0]
+    elif limpo(partes[0]) not in _GENERICOS and len(partes[0]) >= 2:
         nome = partes[0]
     else:
         nome = candidatos[0]
-    # Se o que sobrou também é genérico, é melhor não inventar vocativo:
-    # "@admiradora Que bom, Admiradora!" soa robótico.
+
     if limpo(nome) in _GENERICOS:
         return ""
     return nome[:1].upper() + nome[1:].lower() if nome.isalpha() else nome
