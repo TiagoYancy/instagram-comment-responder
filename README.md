@@ -191,7 +191,7 @@ política de decisão (incluindo as travas do modo automático) e persistência.
 
 A ferramenta responde **no campo de resposta do comentário**, exatamente como
 quando você toca em "Responder" no app. A conversa fica encadeada: o seguidor vê
-a sua resposta logo abaixo do comentário dele.
+a sua resposta indentada logo abaixo do comentário dele, com o seu avatar.
 
 O único endpoint de escrita usado é:
 
@@ -206,9 +206,27 @@ comentário solto na thread, sem encadeamento, e não é o que você faz manualm
 Há testes que travam esse comportamento (`tests/test_endpoint_resposta.py`):
 qualquer escrita para `/{media}/comments` faz a suíte falhar.
 
-> A menção `@usuario` no início do texto é opcional (`usa_at_mencao` na persona).
-> O dono da conta usa, então vem ligado por padrão. Ela só aparece **dentro** da
-> resposta encadeada, nunca como comentário avulso.
+### Formato do texto
+
+Confirmado em captura de tela da conta real:
+
+```
+@pizolatojozelia Falou uma coisa importantíssima! 🍑❤️
+@pizolatojozelia Você acha que a maior dificuldade da costureira é
+descobrir quanto cobrar ou ter coragem de manter o preço? 🎯
+```
+
+Regras que a ferramenta aplica (`tests/test_formato_resposta.py`):
+
+- começa **sempre** com `@menção` ao autor do comentário
+- **parágrafo único** — quebra de linha é colapsada em espaço
+- **emoji no final**, 1 a 2 no máximo
+- comentário curto de opinião → resposta curta e calorosa, muitas vezes
+  terminando com uma **pergunta** que puxa conversa
+- relato pessoal → reconhece o relato e pergunta como está sendo a mudança
+
+A menção `@usuario` é o conteúdo da resposta, **não** o mecanismo de entrega: ela
+vive dentro da resposta encadeada, nunca como comentário avulso.
 
 ---
 

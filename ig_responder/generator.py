@@ -300,6 +300,10 @@ def personalize(draft: Draft, persona: Persona, author: str) -> Draft:
         return draft
     txt = draft.text.strip()
 
+    # Formato do dono: parágrafo único. O Instagram mostra resposta com quebra de
+    # linha como bloco multilinha, o que ele não faz.
+    txt = re.sub(r"\s*\n+\s*", " ", txt)
+
     if txt.startswith("@"):
         txt = _strip_vocativo_handle(txt, author)
 
