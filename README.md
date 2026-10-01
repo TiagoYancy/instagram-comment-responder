@@ -9,6 +9,41 @@ Nasceu analisando o perfil [@amigodacostureira](https://www.instagram.com/amigod
 
 ---
 
+## Início rápido
+
+Requer só **Python 3.10+**. Sem dependências externas obrigatórias.
+
+```bash
+cd instagram-responder
+
+# 1. configurar credenciais
+cp .env.example .env
+#    edite o .env e preencha IG_ACCESS_TOKEN e IG_USER_ID
+
+# 2. conferir se está tudo certo
+python3 -m ig_responder doctor
+
+# 3. escolher o modo (approve = você aprova cada resposta)
+python3 -m ig_responder mode approve
+
+# 4. buscar comentários e gerar rascunhos
+python3 -m ig_responder scan --posts 10 --comments 50
+
+# 5. revisar a fila
+python3 -m ig_responder queue
+
+# 6. aprovar e publicar
+python3 -m ig_responder approve 1
+```
+
+Para testar sem tocar na API do Instagram:
+
+```bash
+python3 -m ig_responder demo
+```
+
+---
+
 ## Como funciona
 
 ```
@@ -43,17 +78,20 @@ sua escolha de aprovar antes ou agir sozinho.
 
 | Modo | Comportamento |
 |---|---|
-| `dry_run` | **Default.** Nunca publica. Só registra o que faria. Use para testar. |
 | `approve` | Gera o rascunho e **espera sua aprovação** antes de publicar. |
 | `auto` | **100% automático.** Publica sozinho quando a confiança ≥ `IG_MIN_CONFIDENCE`. |
+| `dry_run` | Nunca publica. Só registra o que faria. |
 
 Você troca de modo a qualquer momento, sem reiniciar nada:
 
 ```bash
-python -m ig_responder mode auto       # passa a agir sozinho
-python -m ig_responder mode approve    # volta a pedir aprovação
-python -m ig_responder mode dry_run    # modo seguro, não publica
+python3 -m ig_responder mode approve   # você aprova cada resposta
+python3 -m ig_responder mode auto      # passa a agir sozinho
+python3 -m ig_responder mode dry_run   # modo seguro, não publica
 ```
+
+O modo escolhido fica **salvo no banco** e vale para as próximas execuções. A
+flag `--mode X` na linha de comando sobrepõe só aquela execução.
 
 ### Barreiras que valem mesmo no modo `auto`
 
@@ -179,11 +217,13 @@ resposta gerada, decisão tomada e resultado. Nada é respondido duas vezes.
 ## Testes
 
 ```bash
-python -m pytest tests/ -q
+python3 -m pytest tests/ -q
 ```
 
-32 testes cobrindo classificação de sentimento, aprendizado de persona,
-política de decisão (incluindo as travas do modo automático) e persistência.
+119 testes cobrindo classificação de sentimento, aprendizado de persona,
+política de decisão (incluindo as travas do modo automático), formato da
+resposta, encadeamento do endpoint, extração de vocativo, precedência do modo e
+persistência.
 
 ---
 
@@ -240,3 +280,16 @@ vive dentro da resposta encadeada, nunca como comentário avulso.
 - **O Instagram limita chamadas.** Respeite `IG_MAX_REPLIES` e `IG_REPLY_DELAY`.
 - A raspagem de páginas públicas (usada só para montar o corpus inicial) é
   frágil por natureza — serve para aprender a persona, não para operar.
+
+---
+
+## Agendamento (opcional)
+
+`run_cycle.sh` executa um ciclo completo. Para rodar a cada 15 minutos:
+
+```bash
+*/15 * * * * /caminho/para/instagram-responder/run_cycle.sh >> logs/cron.log 2>&1
+```
+
+No modo `approve`, o agendamento só alimenta a fila — nada é publicado sem você
+aprovar. No modo `auto`, ele publica sozinho.

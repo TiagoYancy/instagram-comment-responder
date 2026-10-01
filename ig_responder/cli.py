@@ -28,8 +28,25 @@ from .store import Store
 
 
 def _load_settings(args) -> Settings:
+    """Carrega configuração.
+
+    Precedência do modo de aprovação:
+      1. --mode na linha de comando (explícito, vale só nesta execução)
+      2. modo persistido no banco (definido por `mode approve|auto|dry_run`)
+      3. IG_APPROVAL_MODE do .env / padrão
+    """
     s = Settings.load()
-    if getattr(args, "mode", None):
+    if not getattr(args, "mode", None):
+        # o modo trocado com `mode <x>` fica no banco; sem isto o scan
+        # ignoraria a escolha do usuário e rodaria no modo do .env
+        from .store import Store
+        try:
+            persistido = Store(s.db_path).get_setting("approval_mode", "")
+        except Exception:
+            persistido = ""
+        if persistido:
+            s.approval_mode = persistido
+    else:
         s.approval_mode = args.mode
     s.validate_mode()
     return s
@@ -190,6 +207,71 @@ def cmd_demo(args) -> int:
     return 0
 
 
+# ------------------------------------------------------------------ doctor
+def cmd_doctor(args) -> int:
+    """Verificação pré-voo: credenciais, conexão, LLM e persona."""
+    s = _load_settings(args)
+    ok = True
+
+    def linha(rotulo: str, estado: bool | None, detalhe: str = "") -> None:
+        nonlocal ok
+        marca = {True: "✅", False: "❌", None: "• "}[estado]
+        if estado is False:
+            ok = False
+        print(f"{marca} {rotulo:<22} {detalhe}")
+
+    print("── Credenciais ──")
+    linha("IG_ACCESS_TOKEN", bool(s.access_token),
+          "definido" if s.access_token else "VAZIO — preencha o .env")
+    linha("IG_USER_ID", bool(s.ig_user_id),
+          "definido" if s.ig_user_id else "VAZIO — preencha o .env")
+
+    print("\n── Configuração ──")
+    linha("modo de aprovação", None, s.approval_mode)
+    linha("confiança mínima", None, str(s.min_confidence))
+    linha("teto por execução", None, str(s.max_replies_per_run))
+
+    print("\n── Persona ──")
+    p = Persona.load(s.persona_path)
+    if p.handle:
+        n_ex = sum(len(v) for v in p.exemplos.values())
+        linha("persona", True, f"{p.handle} — {len(p.valores)} valores, {n_ex} exemplos")
+    else:
+        linha("persona", False, "não encontrada em data/persona.json")
+
+    print("\n── Motor de linguagem ──")
+    llm = LLMClient(s)
+    if not llm.enabled:
+        linha("LLM", None, "desligado — usará templates da persona")
+    else:
+        linha("LLM", True, f"{s.llm_model} em {s.llm_base_url}")
+
+    print("\n── Conexão com o Instagram ──")
+    if not (s.access_token and s.ig_user_id):
+        linha("API", None, "pulado (sem credencial)")
+    else:
+        c = GraphClient(s)
+        try:
+            media = c.list_media(limit=3)
+            linha("API", True, f"conectado — {len(media)} posts visíveis")
+            if media:
+                m = media[0]
+                linha("post mais recente", None, (m.get("caption") or "")[:50].replace("\n", " "))
+                try:
+                    cs = c.list_comments(m["id"], limit=5)
+                    linha("leitura de comentários", True, f"{len(cs)} lidos")
+                except Exception as e:
+                    linha("leitura de comentários", False, str(e)[:90])
+        except Exception as e:
+            linha("API", False, str(e)[:140])
+            print("   dica: verifique o token, o IG_USER_ID e as permissões")
+            print("   (instagram_business_basic + instagram_business_manage_comments)")
+
+    print()
+    print("pronto para operar ✅" if ok else "corrija os itens ❌ antes de operar")
+    return 0 if ok else 1
+
+
 # ------------------------------------------------------------------- main
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="ig_responder",
@@ -198,40 +280,53 @@ def main(argv: list[str] | None = None) -> int:
                     help="sobrescreve o modo de aprovação nesta execução")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    p = sub.add_parser("learn", help="aprende a persona a partir de um corpus raspado")
+    # permite --mode também depois do subcomando: `demo --mode auto`
+    comum = argparse.ArgumentParser(add_help=False)
+    comum.add_argument("--mode", choices=["approve", "auto", "dry_run"],
+                       help=argparse.SUPPRESS, default=None)
+
+    p = sub.add_parser("doctor", help="verifica credenciais, conexão, LLM e persona",
+                       parents=[comum])
+    p.set_defaults(func=cmd_doctor)
+
+    p = sub.add_parser("learn", help="aprende a persona a partir de um corpus raspado",
+                       parents=[comum])
     p.add_argument("corpus")
     p.add_argument("--handle", default="")
     p.add_argument("--out", default="")
     p.add_argument("--raw", action="store_true", help="não usar a persona padrão como base")
     p.set_defaults(func=cmd_learn)
 
-    p = sub.add_parser("scan", help="busca comentários novos e gera respostas")
+    p = sub.add_parser("scan", help="busca comentários novos e gera respostas",
+                       parents=[comum])
     p.add_argument("--posts", type=int, default=10)
     p.add_argument("--comments", type=int, default=50)
     p.set_defaults(func=cmd_scan)
 
-    p = sub.add_parser("queue", help="mostra a fila de aprovação")
+    p = sub.add_parser("queue", help="mostra a fila de aprovação", parents=[comum])
     p.add_argument("--limit", type=int, default=20)
     p.set_defaults(func=cmd_queue)
 
-    p = sub.add_parser("approve", help="aprova e publica um rascunho")
+    p = sub.add_parser("approve", help="aprova e publica um rascunho", parents=[comum])
     p.add_argument("id", type=int)
     p.add_argument("--text", default=None)
     p.set_defaults(func=cmd_approve)
 
-    p = sub.add_parser("reject", help="rejeita um rascunho")
+    p = sub.add_parser("reject", help="rejeita um rascunho", parents=[comum])
     p.add_argument("id", type=int)
     p.add_argument("--reason", default="")
     p.set_defaults(func=cmd_reject)
 
-    p = sub.add_parser("mode", help="vê ou troca o modo (approve|auto|dry_run)")
+    p = sub.add_parser("mode", help="vê ou troca o modo (approve|auto|dry_run)",
+                       parents=[comum])
     p.add_argument("value", nargs="?", default="")
     p.set_defaults(func=cmd_mode)
 
-    p = sub.add_parser("stats", help="estatísticas")
+    p = sub.add_parser("stats", help="estatísticas", parents=[comum])
     p.set_defaults(func=cmd_stats)
 
-    p = sub.add_parser("demo", help="roda offline com comentários de exemplo")
+    p = sub.add_parser("demo", help="roda offline com comentários de exemplo",
+                       parents=[comum])
     p.set_defaults(func=cmd_demo)
 
     args = ap.parse_args(argv)
