@@ -187,6 +187,31 @@ política de decisão (incluindo as travas do modo automático) e persistência.
 
 ---
 
+## Onde a resposta é publicada
+
+A ferramenta responde **no campo de resposta do comentário**, exatamente como
+quando você toca em "Responder" no app. A conversa fica encadeada: o seguidor vê
+a sua resposta logo abaixo do comentário dele.
+
+O único endpoint de escrita usado é:
+
+```
+POST /{IG_COMMENT_ID}/replies   {"message": "..."}
+```
+
+O `{IG_COMMENT_ID}` é o id **do comentário**, não do post. A ferramenta **nunca**
+publica um comentário novo no post mencionando a pessoa — isso criaria um
+comentário solto na thread, sem encadeamento, e não é o que você faz manualmente.
+
+Há testes que travam esse comportamento (`tests/test_endpoint_resposta.py`):
+qualquer escrita para `/{media}/comments` faz a suíte falhar.
+
+> A menção `@usuario` no início do texto é opcional (`usa_at_mencao` na persona).
+> O dono da conta usa, então vem ligado por padrão. Ela só aparece **dentro** da
+> resposta encadeada, nunca como comentário avulso.
+
+---
+
 ## Limites conhecidos
 
 - **Curtir comentário não é possível** pela API pública da Meta. A ferramenta

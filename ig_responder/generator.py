@@ -259,11 +259,50 @@ def generate(
     return d
 
 
+def _norm_simples(t: str) -> str:
+    """Minúsculas, sem acento, só alfanumérico."""
+    import unicodedata as _ud
+
+    t = _ud.normalize("NFKD", t or "")
+    t = "".join(c for c in t if not _ud.combining(c))
+    return re.sub(r"[^a-z0-9]", "", t.lower())
+
+
+def _strip_vocativo_handle(txt: str, author: str) -> str:
+    """Remove um vocativo que nada mais é do que o handle repetido.
+
+    O modelo escreve "@cliente_dificil Cliente difícil, ..." — repetir o handle
+    como se fosse o nome da pessoa soa robótico numa resposta pública.
+    """
+    if not author:
+        return txt
+    m = re.match(r"^@(\S+)\s+(.*)$", txt, flags=re.S)
+    if not m:
+        return txt
+    mencao, resto = m.group(1), m.group(2)
+
+    alvo = _norm_simples(author)
+    if not alvo:
+        return txt
+
+    palavras = resto.split()
+    for n in range(1, min(4, len(palavras)) + 1):
+        prefixo = " ".join(palavras[:n])
+        if _norm_simples(prefixo) == alvo:
+            sobra = " ".join(palavras[n:]).lstrip(" ,;:!.-")
+            return f"@{mencao} {sobra}".strip()
+    return txt
+
+
 def personalize(draft: Draft, persona: Persona, author: str) -> Draft:
     """Garante o @ de menção, como o dono faz manualmente."""
     if draft.action != ACTION_REPLY or not draft.text:
         return draft
     txt = draft.text.strip()
+
+    if txt.startswith("@"):
+        txt = _strip_vocativo_handle(txt, author)
+
     if persona.usa_at_mencao and author and not txt.lstrip().startswith("@"):
         txt = f"@{author} {txt}"
     draft.text = re.sub(r"\s{2,}", " ", txt).strip()

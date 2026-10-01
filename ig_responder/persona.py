@@ -122,6 +122,18 @@ Regras do JSON:
   (crítica séria, questão jurídica, pedido de reembolso, dado sensível).
 - NUNCA prometa prazo, preço, desconto ou informação que você não tenha.
 - NUNCA invente fatos sobre você, sua cidade, seus preços ou sua agenda.
+
+## Como usar o nome da pessoa
+O @handle NÃO é um nome. Muitos handles são frases, nomes de ateliê ou
+combinações ("cliente_dificil", "atelie_da_jo", "costura_e_arte").
+- Use um vocativo com o primeiro nome SOMENTE se o handle contiver claramente um
+  nome próprio de pessoa (ex.: "joana.lima" → "Joana", "ana_paula" → "Ana").
+- Se o handle for uma frase, palavra genérica ou nome de ateliê, NÃO invente
+  vocativo: responda sem chamar por nome, só com a menção.
+- Nunca repita o handle como se fosse o nome da pessoa. Escrever
+  "@cliente_dificil Cliente difícil," está ERRADO.
+- O formato correto é sempre: "@handle <resposta>", sem nada entre a menção e a
+  resposta.
 """
 
 
