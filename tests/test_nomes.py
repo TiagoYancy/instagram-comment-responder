@@ -25,13 +25,35 @@ from ig_responder.generator import _primeiro_nome
     ("@joana.lima1268", "Joana"),
     ("dianalima2022_", "Dianalima"),
     ("mariadaconceicao.santana.5203", "Mariadaconceicao"),
-    # só genérico -> cai no que sobra
-    ("atelie", "Atelie"),
+    # só genérico -> sem vocativo (melhor não inventar nome)
+    ("atelie", ""),
+    ("admiradora", ""),
+    ("seguidora", ""),
+    ("cliente", ""),
     ("", ""),
     ("___", ""),
 ])
 def test_primeiro_nome(handle, esperado):
     assert _primeiro_nome(handle) == esperado
+
+
+@pytest.mark.parametrize("handle", [
+    "admiradora", "seguidora", "cliente", "amiga", "querida", "linda",
+    "top", "perfeita", "gente",
+])
+def test_elogio_nao_vira_vocativo(handle):
+    """'@admiradora Que bom, Admiradora!' soa robótico — não deve acontecer."""
+    assert _primeiro_nome(handle) == ""
+
+
+def test_template_sem_nome_nao_deixa_espaco_orfao():
+    from ig_responder.generator import _formata
+    tpl = "Obrigado, {nome}! Você entendeu a mensagem. ✂️"
+    assert _formata(tpl, "Ana") == "Obrigado, Ana! Você entendeu a mensagem. ✂️"
+    out = _formata(tpl, "")
+    assert "{" not in out and "!" in out
+    assert "  " not in out
+    assert not out.startswith(",")
 
 
 def test_primeiro_nome_nunca_quebra():

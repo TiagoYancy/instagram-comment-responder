@@ -143,6 +143,11 @@ _GENERICOS = {
     "ajustes", "confeccao", "customizacao", "personalizados", "the", "real",
     "grupo", "clube", "cursos", "curso", "aula", "aulas", "dicas", "canal",
     "oficial1", "oficiall", "ofc1", "page", "of", "meu", "minha", "sou",
+    # elogios e papéis que não são nomes próprios
+    "admiradora", "admirador", "seguidora", "seguidor", "f", "cliente",
+    "clientes", "amiga", "amigo", "amigao", "gente", "pessoa", "menina",
+    "moca", "senhora", "dona", "querida", "querido", "linda", "lindo",
+    "top", "maravilhosa", "perfeita", "excelente", "otima", "boa", "bom",
 }
 
 
@@ -176,20 +181,33 @@ def _primeiro_nome(author: str) -> str:
         nome = partes[0]
     else:
         nome = candidatos[0]
+    # Se o que sobrou também é genérico, é melhor não inventar vocativo:
+    # "@admiradora Que bom, Admiradora!" soa robótico.
+    if limpo(nome) in _GENERICOS:
+        return ""
     return nome[:1].upper() + nome[1:].lower() if nome.isalpha() else nome
 
 
+def _formata(tpl: str, nome: str) -> str:
+    """Aplica o template; sem nome válido, remove o vocativo em vez de deixar
+    um espaço órfão ("Obrigado, !")."""
+    if nome:
+        return tpl.format(nome=nome)
+    t = tpl.replace("{nome}, ", "").replace(", {nome}", "").replace(" {nome}", "")
+    return t.replace("{nome}", "").strip()
+
+
 def template_reply(persona: Persona, sent: Sentiment, author: str, comment: str) -> Draft | None:
-    nome = _primeiro_nome(author) or "costureira"
+    nome = _primeiro_nome(author)
 
     if sent.label == "spam":
         return None
     if sent.label == "critica":
-        txt = random.choice(_TEMPLATES["critica"]).format(nome=nome)
+        txt = _formata(random.choice(_TEMPLATES["critica"]), nome)
         return _mk(sent, author, comment, txt, ACTION_ESCALATE, 0.6,
                    "crítica exige revisão humana")
     tpls = _TEMPLATES.get(sent.label) or _TEMPLATES["concordancia"]
-    txt = random.choice(tpls).format(nome=nome)
+    txt = _formata(random.choice(tpls), nome)
     # a confiança do template acompanha a confiança da classificação:
     # um comentário claramente elogioso não deveria ir para a fila só por
     # não haver LLM ligado.
@@ -307,7 +325,11 @@ def personalize(draft: Draft, persona: Persona, author: str) -> Draft:
     if txt.startswith("@"):
         txt = _strip_vocativo_handle(txt, author)
 
-    if persona.usa_at_mencao and author and not txt.lstrip().startswith("@"):
+    # A menção é a norma na conta, mas o modelo pode ter decidido não usar
+    # quando o comentário pedia resposta pessoal direta. Só prefixa se o modelo
+    # não escreveu nenhuma menção.
+    ja_tem_mencao = bool(re.match(r"^@\w", txt))
+    if persona.usa_at_mencao and author and not ja_tem_mencao:
         txt = f"@{author} {txt}"
     draft.text = re.sub(r"\s{2,}", " ", txt).strip()
     return draft
