@@ -1,0 +1,62 @@
+persona: @amigodacostureira | nicho: costura, precificação e empreendedorismo para costureiras
+modo: auto | LLM: ligado
+==============================================================================
+
+✅ PUBLICA  @costureira_ana
+   comentário : Que verdade! Falou tudo, vou começar a cobrar o meu valor 👏👏
+   sentimento : elogio (conf 0.66)  sinais: elogio:['falou tudo', 'que verdade'], concordancia:['verdade', 'e verdade']
+   resposta   : @costureira_ana Isso, Ana! 👏 Cobrar o seu valor é o primeiro passo para um trabalho com mais respeito e mais paz. Vai com tudo! ❤️
+   motor      : llm | confiança 0.95
+   decisão    : modo auto: confiança e sentimento OK
+
+✅ PUBLICA  @atelie_maria
+   comentário : Vdd, eu sempre tive vergonha de cobrar mais
+   sentimento : concordancia (conf 0.57)  sinais: concordancia:['vdd'], experiencia:['eu sempre']
+   resposta   : @atelie_maria Maria, essa vergonha é mais comum do que parece, mas o seu trabalho tem valor e merece ser cobrado sem peso. Como você está lidando com isso agora?
+   motor      : llm | confiança 0.85
+   decisão    : modo auto: confiança e sentimento OK
+
+✅ PUBLICA  @joana.lima
+   comentário : Aconteceu comigo semana passada: a cliente levou 4 peças e pediu desconto. Aprendi a dizer não e hoje trabalho
+   sentimento : experiencia (conf 0.80)  sinais: experiencia:['aconteceu comigo', 'aprendi']
+   resposta   : @joana.lima Isso, Joana! 👏 Dizer não para o desconto é o que abre espaço para o trabalho que valoriza seu tempo. Como está sendo essa paz no seu ateliê?
+   motor      : llm | confiança 0.90
+   decisão    : modo auto: confiança e sentimento OK
+
+✅ PUBLICA  @rosa_costuras
+   comentário : de onde você é? qual cidade?
+   sentimento : pergunta (conf 0.95)  sinais: pergunta:['de onde voce', 'qual cidade', 'onde voce'], interrogacao
+   resposta   : @rosa_costuras Rosa, me chama no direct que eu te conto com prazer! 😊
+   motor      : llm | confiança 0.95
+   decisão    : modo auto: confiança e sentimento OK
+
+✅ PUBLICA  @nova_costureira
+   comentário : como faço para parar de dar desconto sem perder cliente?
+   sentimento : duvida (conf 0.67)  sinais: duvida:['como faco'], pergunta:['como faco'], interrogacao, desempate:duvida>pergunta
+   resposta   : @nova_costureira, começa assim: cobra o valor cheio na primeira proposta e não fica justificando preço. Se quiser, me chama no direct que eu te explico com carinho. ❤️
+   motor      : llm | confiança 0.95
+   decisão    : modo auto: confiança e sentimento OK
+
+⏭️  IGNORA  @promo_br
+   comentário : GANHE DINHEIRO EM CASA!! clique aqui http://spam.example.com renda extra garantida
+   sentimento : spam (conf 0.95)  sinais: spam:['http://', 'clique aqui', 'ganhe dinheiro']
+   resposta   : (nada)
+   motor      : template | confiança 0.95
+   decisão    : ignorado por política (spam/ofensa)
+
+⏳ APROVAÇÃO  @cliente_chateada
+   comentário : isso é papo de quem cobra caro, discordo totalmente
+   sentimento : critica (conf 0.59)  sinais: critica:['discordo'], concordancia:['isso ']
+   resposta   : @cliente_chateada Entendo sua discordância! O que eu defendo é que cada profissional saiba o custo do próprio tempo. Se quiser, me conta como você faz no seu ateliê. ❤️
+   motor      : llm | confiança 0.90
+   decisão    : sentimento sensível — revisão humana obrigatória
+
+✅ PUBLICA  @admiradora
+   comentário : Perfeito 👏 Salvei para ouvir todos os dias.
+   sentimento : elogio (conf 0.87)  sinais: elogio:['perfeito', 'salvei']
+   resposta   : @admiradora Que alegria saber disso! Salva mesmo e volta sempre que precisar lembrar. 👏❤️
+   motor      : llm | confiança 0.95
+   decisão    : modo auto: confiança e sentimento OK
+
+==============================================================================
+publicaria sozinho: 6 | fila humana: 1 | ignorados: 1
