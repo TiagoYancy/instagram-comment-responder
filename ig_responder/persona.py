@@ -264,9 +264,9 @@ def learn_persona(
 
 
 def default_persona() -> Persona:
-    """Persona do @amigodacostureira, derivada de observação real dos posts."""
+    """Persona da @costureira, derivada de observação real dos posts."""
     return Persona(
-        handle="@amigodacostureira",
+        handle="@costureira",
         nicho="costura, precificação e empreendedorismo para costureiras",
         publico="costureiras e ateliês, majoritariamente mulheres brasileiras, 35-65 anos",
         cidade="Ipatinga - Minas Gerais, Brasil",

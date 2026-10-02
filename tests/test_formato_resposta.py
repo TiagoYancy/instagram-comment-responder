@@ -1,6 +1,6 @@
 """Testes do formato de resposta observado na conta real.
 
-Padrões confirmados em captura de tela do @amigodacostureira:
+Padrões confirmados em captura de tela do @costureira:
   - a resposta é encadeada (campo "Responder"), indentada sob o comentário
   - começa com @menção
   - parágrafo ÚNICO, sem quebra de linha

@@ -55,7 +55,7 @@ def test_classify_confianca_range():
 # ---------------------------------------------------------------- persona
 def test_default_persona_tem_valores():
     p = default_persona()
-    assert p.handle == "@amigodacostureira"
+    assert p.handle == "@costureira"
     assert p.usa_at_mencao is True
     assert len(p.valores) >= 5
     assert "experiencia" in p.exemplos
@@ -74,17 +74,17 @@ def test_learn_persona_de_corpus():
     corpus = [{
         "url": "x",
         "text": (
-            "amigodacostureira\n \n1w\nCOSTUREIRA 👀\n"
+            "costureira\n \n1w\nCOSTUREIRA 👀\n"
             "seguidora_a\n \n1w\nConcordo plenamente!\nLike\nReply\n"
-            "amigodacostureira\n \n1w\n"
+            "costureira\n \n1w\n"
             "@seguidora_a Concordo! O serviço tem valor e não pode ser tratado como favor. ❤️\n"
             "Like\nReply\n"
-            "amigodacostureira\n \n1w\n"
+            "costureira\n \n1w\n"
             "@seguidora_b Exatamente! Mais peças representam mais tempo e mais responsabilidade.\n"
             "Like\nReply\n"
         ),
     }]
-    p = learn_persona(corpus, handle="@amigodacostureira", base=Persona())
+    p = learn_persona(corpus, handle="@costureira", base=Persona())
     assert p.usa_at_mencao is True
     assert p.tratamento == "você"
     assert p.comprimento_frase == "curta"
@@ -93,7 +93,7 @@ def test_learn_persona_de_corpus():
 
 def test_system_prompt_contem_voz():
     sp = default_persona().system_prompt()
-    assert "amigodacostureira" in sp
+    assert "costureira" in sp
     assert "NUNCA" in sp
     assert '"texto"' in sp
 

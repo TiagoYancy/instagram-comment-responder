@@ -1,4 +1,4 @@
-persona: @amigodacostureira | nicho: costura, precificação e empreendedorismo para costureiras
+persona: @costureira | nicho: costura, precificação e empreendedorismo para costureiras
 modo: auto | LLM: ligado
 ==============================================================================
 

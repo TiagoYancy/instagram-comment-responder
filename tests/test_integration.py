@@ -191,7 +191,7 @@ def test_aprovar_duas_vezes_falha(tmp_path):
 
 def test_nao_responde_o_proprio_dono(tmp_path):
     s = _settings(tmp_path, "auto")
-    proprio = Comment(id="c9", text="@ana Exatamente!", username="amigodacostureira",
+    proprio = Comment(id="c9", text="@ana Exatamente!", username="costureira",
                       timestamp="2026-01-01T00:00:00+0000", media_id="m1")
     fake = FakeClient([proprio])
     r = Responder(s, store=Store(s.db_path), client=fake)

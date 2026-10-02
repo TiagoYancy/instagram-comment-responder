@@ -4,7 +4,7 @@ Ferramenta autônoma que responde comentários no Instagram **no estilo do dono 
 conta** — capta o tom, o vocabulário e o jeito de tratar o público, e reproduz
 isso em cada resposta.
 
-Nasceu analisando o perfil [@amigodacostureira](https://www.instagram.com/amigodacostureira/)
+Nasceu analisando o perfil [@costureira](https://www.instagram.com/costureira/)
 (nicho: costura, precificação e empreendedorismo para costureiras).
 
 ---
@@ -136,7 +136,7 @@ cp .env.example .env
 
 ```bash
 # Aprende/atualiza a persona a partir de um corpus raspado de posts
-python -m ig_responder learn data/corpus_amigodacostureira.json --handle @amigodacostureira
+python -m ig_responder learn data/corpus_costureira.json --handle @costureira
 
 # Busca comentários novos, gera respostas e aplica a política
 python -m ig_responder scan --posts 10 --comments 50
@@ -171,7 +171,7 @@ Campos principais:
 
 ```json
 {
-  "handle": "@amigodacostureira",
+  "handle": "@costureira",
   "nicho": "costura, precificação e empreendedorismo para costureiras",
   "tom": ["acolhedor e respeitoso", "didático sem ser professoral", "..."],
   "comprimento_frase": "curta",
